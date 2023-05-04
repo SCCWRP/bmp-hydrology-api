@@ -1,0 +1,192 @@
+openapi: 3.0.3
+info:
+  title: BMP Hydrology API
+  description: |-
+    This is the BMP Hydrology API documentation. Work in progress!
+  termsOfService: http://sccwrp.org/fake-url/to-tos
+  contact:
+    email: duyn@sccwrp.org
+  license:
+    name: MIT
+    url: https://mit-license.org/
+  version: 0.0.1
+tags:
+  - name: rain
+    description: Everything about your Rain data submission
+paths:
+  /rain:
+    post:
+      tags:
+        - rain
+      summary: Get rain statistics for submitted data
+      description: Returns rain statistics. Note that if posted data contains more than one rain event, then the response data statistics will contain records for each of the rain events.
+      operationId: getRainStatistics
+      requestBody:
+        description: Get rain statistics for submitted data
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RainRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RainResponse'
+        '400':
+          description: Invalid data format
+      security:
+        - rain_auth:
+            - read:rain
+  /flow:
+    post:
+      tags:
+        - flow
+      summary: Get flow statistics for submitted data
+      description: Returns flow statistics
+      operationId: getFlowStatistics
+      requestBody:
+        description: Get flow statistics for submitted data
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FlowRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FlowResponse'
+        '400':
+          description: Invalid data format
+      security:
+        - flow_auth:
+            - read:flow
+
+components:
+  schemas:
+    RainRequest:
+      type: object
+      properties:
+        datetime:
+          type: array
+          items:
+            type: string
+            format: date-time
+          example: ["2023-01-01T00:00:00","2023-01-01T00:01:00","2023-01-01T00:02:00"]
+        rain:
+          type: array
+          items:
+            type: number
+            format: float
+          example: [0, 0.1, 0.1]
+    RainResponse:
+      type: object
+      properties:
+        type:
+          type: string
+          example: rain
+        statistics:
+          type: array
+          items: 
+            $ref: '#/components/schemas/RainStatistics'
+    RainStatistics:
+      type: object
+      properties:
+        avg_rainfall_intensity:
+          type: array
+          items:
+            type: number
+            format: float
+          example: [12.0]
+        first_rain:
+          type: array
+          items:
+            type: string
+            format: date-time
+          example: [2023-01-01T00:01:00]
+        last_rain:
+          type: array
+          items:
+            type: string
+            format: date-time
+          example: [2023-01-01T00:02:00]
+        peak_10_min_rainfall_intensity:
+          type: array
+          items:
+            type: number
+            format: float
+          example: [0.02]
+        peak_5_min_rainfall_intensity:
+          type: array
+          items: 
+            type: number
+            format: float
+          example: [0.04]
+        total_rainfall:
+          type: array
+          items:
+            type: number
+            format: float
+          example: [0.2]
+    FlowRequest:
+      type: object
+      properties:
+        datetime:
+          type: array
+          items:
+            type: string
+            format: date-time
+          example: ["2023-01-01T00:00:00","2023-01-01T00:01:00","2023-01-01T00:02:00"]
+        flow:
+          type: array
+          items:
+            type: number
+            format: float
+          example: [27.6, 27.6, 28]
+    FlowResponse:
+      type: object
+      properties:
+        type:
+          type: string
+          example: flow
+        statistics:
+          $ref: '#/components/schemas/FlowStatistics'
+    FlowStatistics:
+      type: object
+      properties:
+        runoff_volume:
+          type: array
+          items:
+            type: number
+            format: float
+          example: [12.0]
+        start_time:
+          type: array
+          items:
+            type: string
+            format: date-time
+          example: [2023-01-01T00:00:00]
+  securitySchemes:
+    rain_auth:
+      type: oauth2
+      flows:
+        implicit:
+          authorizationUrl: https://petstore3.swagger.io/oauth/authorize
+          scopes:
+            read:rain: read rain statistics
+    flow_auth:
+      type: oauth2
+      flows:
+        implicit:
+          authorizationUrl: https://petstore3.swagger.io/oauth/authorize
+          scopes:
+            read:flow: read flow statistics
+    api_key:
+      type: apiKey
+      name: api_key
+      in: header

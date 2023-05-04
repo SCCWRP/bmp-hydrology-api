@@ -1,0 +1,7 @@
+files/
+arcgis_sync/__pycache__/
+archived/
+__pycache__/
+.venv/
+docker/
+proj/test/

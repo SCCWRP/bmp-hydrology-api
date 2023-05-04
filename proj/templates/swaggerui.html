@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no"/>
+    <title>
+      BMP Hydrology API
+    </title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/swagger-ui.css') }}">
+  </head>
+  <body>
+    <div id="swagger-ui" openapi-url = "{{ url_for('static', filename = 'openapi.yaml') }}"></div>
+    <script src="{{ url_for('static', filename = 'js/swagger-ui-bundle.js') }}" charset="UTF-8"> </script>
+    <script src="{{ url_for('static', filename = 'js/swagger-ui-standalone-preset.js') }}" charset="UTF-8"> </script>
+    <script src="{{ url_for('static', filename = 'js/swagger-initializer.js') }}" charset="UTF-8"> </script>
+  </body>
+</html>
