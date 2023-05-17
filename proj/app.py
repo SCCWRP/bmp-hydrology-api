@@ -112,7 +112,8 @@ def flow():
             "runoff_volume": [get_runoff_volume(series, unit = time_units[data_type])],
             "runoff_duration" : [get_runoff_duration(series)],
             "peak_flow_rate" : [get_peak_flow_rate(series)],
-            "start_time" : [np.datetime_as_string(series.index.to_numpy()[0], unit = 's')]
+            "start_time" : [np.datetime_as_string(series.index.to_numpy()[0], unit = 's')],
+            "end_time" : [np.datetime_as_string(series.index.to_numpy()[-1], unit = 's')]
         })
         statistics[data_type] = format_statistics(df)
     
