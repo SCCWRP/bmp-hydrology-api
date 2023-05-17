@@ -1,19 +1,10 @@
 from flask import Flask
 from flask import session, request, send_from_directory, render_template, redirect, send_file, session, jsonify
-from werkzeug.utils import secure_filename
-import sqlalchemy
-from sqlalchemy import create_engine
-from sqlalchemy.schema import CreateSchema
-import psycopg2
-import os, time, json
+import os, json
 import pandas as pd
 import numpy as np
-import time, datetime
-from datetime import datetime
-from zipfile import ZipFile
-from urllib.error import HTTPError
 from .utils.utils import *
-from .functions.rain import get_first_rain, get_last_rain, get_avg_rainfall_intensity, get_peak_rainfall_intensity, get_total_rainfall, get_total_rainfall_duration
+from .functions.rain import get_first_rain, get_last_rain, get_avg_rainfall_intensity, get_peak_rainfall_intensity, get_total_rainfall, get_total_rainfall_duration, get_antecedent_dry_period
 from .functions.flow import get_runoff_volume, get_peak_flow_rate, get_runoff_duration, get_percent_change
 
 app = Flask(__name__)
@@ -65,6 +56,8 @@ def rain():
     avg_rainfall_intensity = get_avg_rainfall_intensity(total_rainfall, total_rainfall_duration)
     peak_5_min_rainfall_intensity = get_peak_rainfall_intensity(formatted_rain_data, first_rain, last_rain)
     peak_10_min_rainfall_intensity = get_peak_rainfall_intensity(formatted_rain_data, first_rain, last_rain, minute_window = 10)
+    peak_60_min_rainfall_intensity = get_peak_rainfall_intensity(formatted_rain_data, first_rain, last_rain, minute_window = 60)
+    antecedent_dry_period = get_antecedent_dry_period(first_rain, last_rain)
 
     df = pd.DataFrame({
         "first_rain": np.datetime_as_string(first_rain, unit = 's'),
@@ -72,7 +65,9 @@ def rain():
         "total_rainfall": total_rainfall,
         "avg_rainfall_intensity": avg_rainfall_intensity,
         "peak_5_min_rainfall_intensity": peak_5_min_rainfall_intensity,
-        "peak_10_min_rainfall_intensity": peak_10_min_rainfall_intensity
+        "peak_10_min_rainfall_intensity": peak_10_min_rainfall_intensity,
+        "peak_60_min_rainfall_intensity": peak_60_min_rainfall_intensity,
+        "antecedent_dry_period": antecedent_dry_period
     })
 
     # don't care about single tip events

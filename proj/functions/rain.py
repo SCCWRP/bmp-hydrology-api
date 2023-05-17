@@ -77,6 +77,14 @@ def get_peak_rainfall_intensity(formatted_data, first_rain, last_rain, minute_wi
     ).to_numpy()
     return peak_rainfall_intensity*60/minute_window
 
+def get_antecedent_dry_period(first_rain, last_rain):
+    first = pd.Series(first_rain)
+    last = pd.Series(last_rain)
+    # dry period is the difference between the current first rain and the previous last rain in days
+    # 86400 is conversion from seconds to days
+    antecedent_dry_period = ((first - last.shift()).dt.total_seconds()/86400).to_numpy()
+    return antecedent_dry_period
+
 def custom_mean(data_window, minute_window):
     return data_window.sum(where = ~np.isnan(data_window))/minute_window
 
