@@ -13,9 +13,13 @@ def get_runoff_volume(formatted_data, unit = "s"):
     return runoff_volume
     
 def trapezoid(data_window, unit):
-    # relies on flow data being volume per second, may be okay?
-    # not anymore!
-    diff = data_window.index.to_series().diff().astype(f'timedelta64[{unit}]').astype('Int64')[-1]
+    units = {
+        "min": "m",
+        "m": "m",
+        "s": "s",
+        "sec": "s"
+    }
+    diff = data_window.index.to_series().diff().astype(f'timedelta64[{units[unit]}]').astype('Int64')[-1]
     return data_window.mean()*diff
 
 def get_peak_flow_rate(formatted_data, minute_window=5):
