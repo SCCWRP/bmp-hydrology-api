@@ -19,7 +19,7 @@ def trapezoid(data_window, unit):
         "s": "s",
         "sec": "s"
     }
-    diff = data_window.index.to_series().diff().astype(f'timedelta64[{units[unit]}]').astype('Int64')[-1]
+    diff = data_window.index.to_series().diff().dt.total_seconds().iloc[-1]
     return data_window.mean()*diff
 
 def get_peak_flow_rate(formatted_data, minute_window=5):
