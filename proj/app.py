@@ -89,21 +89,21 @@ def flow():
     try:
         data = load_data(request, valid_keys)
     except ValueError as err:
-        print(err)
         response = app.response_class(
             response = 'Invalid data format',
             status = 400,
             mimetype = 'application/json'
         )
         return response
-    print(data)
+
     time_units = {}
     for data_type, data_dict in data.items():
         time_units[data_type] = data_dict.pop('time_unit')
         
         if not isinstance(time_units[data_type], str):
             time_units[data_type] =  list(set(time_units[data_type]))[0]
-
+    print("time units")
+    print(time_units)
     formatted_data = {}
     for data_type, df in data.items():
         formatted_data[data_type] = format_data(df)
