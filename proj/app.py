@@ -322,7 +322,7 @@ def infiltration():
                 # Store computed values for this piezometer
                 calc_results[piez] = {
                     "extended_time": [pd.Timestamp(x) for x in extended_time],
-                    "best_fit_line": best_fit_line.tolist(),
+                    "best_fit_line": [-88 if np.isnan(val) or np.isinf(val) else val for val in best_fit_line.tolist()],
                     "infiltration_rate": infiltration_rate,
                     "delta_x": delta_x,
                     "y_average": y_average
