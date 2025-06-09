@@ -3,5 +3,6 @@ arcgis_sync/__pycache__/
 archived/
 __pycache__/
 .venv/
+venv/
 docker/
 proj/test/
