@@ -1,12 +1,12 @@
 from flask import Flask
-from flask import session, request, send_from_directory, render_template, redirect, send_file, session, jsonify
-import os, json
+from flask import request, render_template, jsonify
+import os
 import pandas as pd
 import numpy as np
-from .utils.utils import *
+from .utils.utils import load_data, format_data, format_statistics
 from .functions.rain import get_first_rain, get_last_rain, get_avg_rainfall_intensity, get_peak_rainfall_intensity, get_total_rainfall, get_total_rainfall_duration, get_antecedent_dry_period
 from .functions.flow import get_runoff_volume, get_peak_flow_rate, get_runoff_duration, get_percent_change
-from .functions.infiltration import *
+from .functions.infiltration import smooth_timeseries, fit_exponential_decay, exponential_decay
 
 
 app = Flask(__name__)
