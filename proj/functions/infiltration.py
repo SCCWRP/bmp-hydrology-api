@@ -13,9 +13,9 @@ def smooth_timeseries(depth, kernel_size=SMOOTHING_WINDOW):
     return medfilt(depth, kernel_size)
 
 
-def exponential_decay(t, y0, k):
+def exponential_decay(t, y0, k, c):
     """Exponential decay function."""
-    return y0 * np.exp(-k * t)
+    return y0 * np.exp(-k * t) + c
 
 
 def fit_exponential_decay(time, depth, window_size):
@@ -44,23 +44,39 @@ def fit_exponential_decay(time, depth, window_size):
                 1, "s"
             )
 
+            # Original data
+            t_orig = np.array(window_time_numeric)
+            y_orig = np.array(window_depth)
+
+
+            # Normalize time to [0, 1] and depth to [0, 1]
+            t_max = np.max(t_orig)
+            y_max = np.max(y_orig)
+            t_norm = t_orig / t_max if t_max != 0 else t_orig
+            y_norm = y_orig / y_max if y_max != 0 else y_orig
+
             try:
                 # Provide an initial guess for the parameters
-                initial_guess = [window_depth[0], 0.1]
+                # initial_guess = [window_depth[0], 0.1]
                 params, _ = curve_fit(
                     exponential_decay,
-                    window_time_numeric,
-                    window_depth,
-                    p0=initial_guess,
-                    maxfev=10000,
+                    t_norm,
+                    y_norm
+                    # p0=initial_guess,
+                    # maxfev=10000,
                 )
                 # Calculate the R-squared value
-                residuals = window_depth - exponential_decay(
-                    window_time_numeric, *params
+                residuals = y_norm - exponential_decay(
+                    t_norm, *params
                 )
                 ss_res = np.sum(residuals**2)
-                ss_tot = np.sum((window_depth - np.mean(window_depth)) ** 2)
+                ss_tot = np.sum((y_norm - np.mean(y_norm)) ** 2)
                 r_squared = 1 - (ss_res / ss_tot)
+
+                # Denormalize the params: y0, k, c
+                params[0] = params[0] * y_max  # y0
+                params[1] = params[1] / t_max  # k
+                params[2] = params[2] * y_max  # c
 
                 if r_squared > best_r_squared:
                     best_r_squared = r_squared
