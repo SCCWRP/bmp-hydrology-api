@@ -118,7 +118,7 @@ def rain():
 def flow():
     try:
         data = load_data(request, valid_keys)
-    except ValueError as err:
+    except ValueError:
         response = app.response_class(
             response="Invalid data format", status=400, mimetype="application/json"
         )
@@ -384,7 +384,7 @@ def infiltration():
                 )
 
                 # Compute extended time series and best fit line for plotting
-                buffer_time = pd.Timedelta(minutes=720)
+                buffer_time = 0  #pd.Timedelta(minutes=720)
                 extended_time = pd.date_range(
                     start=window_start - buffer_time,
                     end=window_end + buffer_time,
@@ -437,6 +437,7 @@ def infiltration():
             "best_r_squared_list": best_r_squared_list,
             "calc_results": calc_results,
         }
+        
         return jsonify(result)
     except Exception as e:
         # Return error message and a 500 status code if something goes wrong
