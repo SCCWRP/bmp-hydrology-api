@@ -335,6 +335,9 @@ def infiltration():
             format="%Y-%m-%d %H:%M:%S",
         )
 
+        # Prepare data frame for rolling operations in smoothing function
+        df = df.set_index("datetime")
+
         # Prepare dictionaries to store results for each piezometer column
         best_windows = {}
         best_params_list = {}
@@ -342,16 +345,16 @@ def infiltration():
         calc_results = {}
 
         # Dynamically determine which columns to process (all except 'datetime')
-        piezometer_cols = [col for col in df.columns if col != "datetime"]
+        piezometer_cols = [col for col in df.columns]
 
         for piez in piezometer_cols:
             # Create a smoothed column name that replaces spaces with underscores
             smoothed_col = f"smooth_{piez.replace(' ', '_')}"
-            df[smoothed_col] = smooth_timeseries(df[piez], kernel_size=SMOOTHING_WINDOW)
+            df[smoothed_col] = smooth_timeseries(df[piez])
 
             # Fit the exponential decay model using the provided regression window size
             best_window, best_params, best_fit, best_r_squared = fit_exponential_decay(
-                df["datetime"], df[smoothed_col], REGRESSION_WINDOW
+                pd.Series(df.index), df[smoothed_col], REGRESSION_WINDOW
             )
 
             if best_window:
@@ -365,7 +368,7 @@ def infiltration():
                 window_start = best_window[0][0]
                 window_end = best_window[0][-1]
                 best_window_indexes = df.index[
-                    (df["datetime"] >= window_start) & (df["datetime"] <= window_end)
+                    (df.index >= window_start) & (df.index <= window_end)
                 ]
 
                 # Calculate infiltration rate parameters
@@ -413,6 +416,7 @@ def infiltration():
                 calc_results[piez] = None
 
         # Convert the datetime column to ISO format for JSON serialization.
+        df = df.reset_index()
         df["datetime"] = df["datetime"].apply(lambda x: x.isoformat())
         dataframe_json = df.to_dict(orient="records")
 

@@ -1,16 +1,19 @@
 import numpy as np
-from scipy.signal import medfilt
 from scipy.optimize import curve_fit
 
 # Global default parameters (will be overridden by the API payload if provided)
-SMOOTHING_WINDOW = 5  # e.g., 5 minute window for median filter
+SMOOTHING_WINDOW = 15  # e.g., 15 minute window for median filter
 REGRESSION_WINDOW = 720  # e.g., 12 hour window (in minutes) for regression
 REGRESSION_THRESHOLD = 0.999  # Minimum acceptable R-squared value
 
 
-def smooth_timeseries(depth, kernel_size=SMOOTHING_WINDOW):
+def smooth_timeseries(depth, smoothing_window=SMOOTHING_WINDOW):
     """Apply a median filter to smooth the depth data."""
-    return medfilt(depth, kernel_size)
+    # Get the average time difference in seconds between consecutive depth measurements
+    mean_delta_t_s = depth.index.to_series().diff().mean().total_seconds()
+    # Divide 15 minutes by the mean delta time to get the filter size in terms of data points
+    filter_size = min(smoothing_window*60 // mean_delta_t_s, 1)
+    return depth.rolling(window=f'{filter_size}s', center=True).median()
 
 
 def exponential_decay(t, y0, k, c):
@@ -57,13 +60,10 @@ def fit_exponential_decay(time, depth, window_size):
 
             try:
                 # Provide an initial guess for the parameters
-                # initial_guess = [window_depth[0], 0.1]
                 params, _ = curve_fit(
                     exponential_decay,
                     t_norm,
                     y_norm
-                    # p0=initial_guess,
-                    # maxfev=10000,
                 )
                 # Calculate the R-squared value
                 residuals = y_norm - exponential_decay(
