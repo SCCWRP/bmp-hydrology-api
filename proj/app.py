@@ -250,6 +250,8 @@ def infiltration():
         # Get JSON input from the POST request
         request_data = request.get_json()
         data = request_data.get("data")
+        print("data")
+        print(data)
         smoothing_window = int(request_data.get("SMOOTHING_WINDOW"))
         regression_window = int(request_data.get("REGRESSION_WINDOW"))
         regression_threshold = float(request_data.get("REGRESSION_THRESHOLD"))
