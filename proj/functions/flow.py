@@ -7,8 +7,6 @@ def get_runoff_duration(formatted_data):
     return runoff_duration
 
 def get_runoff_volume(formatted_data, unit = "s"):
-    print("unit")
-    print(unit)
     runoff_volume_segments = formatted_data.dropna()
     runoff_volume_segments = runoff_volume_segments.rolling(window = 2).apply(trapezoid, kwargs = {"unit": unit})
     runoff_volume = runoff_volume_segments.sum()
@@ -23,7 +21,7 @@ def trapezoid(data_window, unit):
     diff = data_window.index.to_series().diff().dt.total_seconds().iloc[-1]
     if unit in units_dict:
         diff = diff/units_dict[unit]
-
+        
     return data_window.mean()*diff
 
 def get_peak_flow_rate(formatted_data, minute_window=5):
