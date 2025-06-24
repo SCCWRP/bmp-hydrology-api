@@ -2,8 +2,11 @@ openapi: 3.0.3
 info:
   title: BMP Hydrology API
   description: |-
-    This is the BMP Hydrology API documentation. Work in progress!
-  termsOfService: http://sccwrp.org/fake-url/to-tos
+
+
+    **Official BMP Hydrology API documentation.**
+
+    The frontend of the API is available at [https://sccwrp.shinyapps.io/bmp-hydrology-calculator/](https://sccwrp.shinyapps.io/bmp-hydrology-calculator/).
   contact:
     email: duyn@sccwrp.org
   license:
@@ -12,14 +15,22 @@ info:
   version: 0.0.1
 tags:
   - name: rain
-    description: Everything about your Rain data submission
+    description: Rainfall analysis
+  - name: flow
+    description: Flow analysis
+  - name: infiltration
+    description: Infiltration analysis
+
+servers:
+  - url: https://nexus.sccwrp.org/bmp_hydrology
+
 paths:
-  /rain:
+  /api/rain:
     post:
       tags:
         - rain
       summary: Get rain statistics for submitted data
-      description: Returns rain statistics. Note that if posted data contains more than one rain event, then the response data statistics will contain records for each of the rain events.
+      description: Returns rain statistics for each rain event.
       operationId: getRainStatistics
       requestBody:
         description: Get rain statistics for submitted data
@@ -27,6 +38,10 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/RainRequest'
+            example:
+              rain:
+                datetime: ["2023-01-01T00:00:00", "2023-01-01T00:01:00", "2023-01-01T00:02:00"]
+                rain: [0, 0.1, 0.1]
         required: true
       responses:
         '200':
@@ -34,18 +49,26 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RainResponse'
+                $ref: '#/components/schemas/RainApiResponse'
         '400':
           description: Invalid data format
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
       security:
         - rain_auth:
             - read:rain
-  /flow:
+
+  /api/flow:
     post:
       tags:
         - flow
       summary: Get flow statistics for submitted data
-      description: Returns flow statistics
+      description: Returns flow statistics for each flow type.
       operationId: getFlowStatistics
       requestBody:
         description: Get flow statistics for submitted data
@@ -53,6 +76,23 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/FlowRequest'
+            example:
+              inflow1:
+                datetime: ["2023-01-01T00:00:00", "2023-01-01T00:01:00", "2023-01-01T00:02:00"]
+                flow: [27.6, 27.6, 28]
+                time_unit: "L/s"
+              inflow2:
+                datetime: ["2023-01-01T00:00:00", "2023-01-01T00:01:00", "2023-01-01T00:02:00"]
+                flow: [10.2, 10.3, 10.4]
+                time_unit: "L/s"
+              outflow:
+                datetime: ["2023-01-01T00:00:00", "2023-01-01T00:01:00", "2023-01-01T00:02:00"]
+                flow: [15.1, 15.2, 15.3]
+                time_unit: "L/s"
+              bypass:
+                datetime: ["2023-01-01T00:00:00", "2023-01-01T00:01:00", "2023-01-01T00:02:00"]
+                flow: [0.0, 0.0, 0.0]
+                time_unit: "L/s"
         required: true
       responses:
         '200':
@@ -60,12 +100,63 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/FlowResponse'
+                $ref: '#/components/schemas/FlowApiResponse'
         '400':
           description: Invalid data format
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
       security:
         - flow_auth:
             - read:flow
+
+  /api/infiltration:
+    post:
+      tags:
+        - infiltration
+      summary: Get infiltration analysis for submitted data
+      description: |
+        Returns infiltration analysis for piezometer data.
+        **Note:** The `datetime` field in the `data` array must be in ISO8601 format, e.g., `"2023-01-01T00:00:00"`.
+      operationId: getInfiltrationAnalysis
+      requestBody:
+        description: Get infiltration analysis for submitted data. The `datetime` field must be in ISO8601 format (e.g., "2023-01-01T00:00:00").
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InfiltrationRequest'
+            example:
+              data:
+                - datetime: "2023-01-01T00:00:00"
+                  piez1: 10.2
+                  piez2: 11.1
+                - datetime: "2023-01-01T00:01:00"
+                  piez1: 10.1
+                  piez2: 11.0
+              SMOOTHING_WINDOW: 5
+              REGRESSION_WINDOW: 720
+              REGRESSION_THRESHOLD: 0.999
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InfiltrationApiResponse'
+        '400':
+          description: Invalid data format
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
 
 components:
   schemas:
@@ -84,55 +175,43 @@ components:
             type: number
             format: float
           example: [0, 0.1, 0.1]
-    RainResponse:
+
+    RainApiResponse:
       type: object
       properties:
-        type:
-          type: string
-          example: rain
         statistics:
           type: array
-          items: 
+          items:
             $ref: '#/components/schemas/RainStatistics'
+
     RainStatistics:
       type: object
       properties:
-        avg_rainfall_intensity:
-          type: array
-          items:
-            type: number
-            format: float
-          example: [12.0]
         first_rain:
-          type: array
-          items:
-            type: string
-            format: date-time
-          example: [2023-01-01T00:01:00]
+          type: string
+          format: date-time
         last_rain:
-          type: array
-          items:
-            type: string
-            format: date-time
-          example: [2023-01-01T00:02:00]
-        peak_10_min_rainfall_intensity:
-          type: array
-          items:
-            type: number
-            format: float
-          example: [0.02]
-        peak_5_min_rainfall_intensity:
-          type: array
-          items: 
-            type: number
-            format: float
-          example: [0.04]
+          type: string
+          format: date-time
         total_rainfall:
-          type: array
-          items:
-            type: number
-            format: float
-          example: [0.2]
+          type: number
+          format: float
+        avg_rainfall_intensity:
+          type: number
+          format: float
+        peak_5_min_rainfall_intensity:
+          type: number
+          format: float
+        peak_10_min_rainfall_intensity:
+          type: number
+          format: float
+        peak_60_min_rainfall_intensity:
+          type: number
+          format: float
+        antecedent_dry_period:
+          type: number
+          format: float
+
     FlowRequest:
       type: object
       properties:
@@ -148,29 +227,128 @@ components:
             type: number
             format: float
           example: [27.6, 27.6, 28]
-    FlowResponse:
+        time_unit:
+          type: string
+          example: "L/s"
+
+    FlowApiResponse:
       type: object
       properties:
-        type:
-          type: string
-          example: flow
         statistics:
-          $ref: '#/components/schemas/FlowStatistics'
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/FlowStatisticsOrPercentChange'
+
+    FlowStatisticsOrPercentChange:
+      oneOf:
+        - $ref: '#/components/schemas/FlowStatistics'
+        - type: array
+          items:
+            type: number
+            format: float
+
     FlowStatistics:
       type: object
       properties:
         runoff_volume:
-          type: array
-          items:
-            type: number
-            format: float
-          example: [12.0]
+          type: number
+          format: float
+        runoff_duration:
+          type: number
+          format: float
+        peak_flow_rate:
+          type: number
+          format: float
         start_time:
+          type: string
+          format: date-time
+        end_time:
+          type: string
+          format: date-time
+
+    InfiltrationRequest:
+      type: object
+      properties:
+        data:
           type: array
           items:
-            type: string
-            format: date-time
-          example: [2023-01-01T00:00:00]
+            type: object
+            properties:
+              datetime:
+                type: string
+                format: date-time
+              # piezometer columns are dynamic, so allow additional properties
+            additionalProperties:
+              type: number
+        SMOOTHING_WINDOW:
+          type: integer
+          example: 5
+        REGRESSION_WINDOW:
+          type: integer
+          example: 720
+        REGRESSION_THRESHOLD:
+          type: number
+          example: 0.999
+
+    InfiltrationApiResponse:
+      type: object
+      properties:
+        dataframe:
+          type: array
+          items:
+            type: object
+            properties:
+              datetime:
+                type: string
+                format: date-time
+              # piezometer columns are dynamic
+            additionalProperties:
+              type: number
+        best_windows:
+          type: object
+          additionalProperties:
+            type: object
+            properties:
+              window_time:
+                type: array
+                items:
+                  type: string
+                  format: date-time
+              window_depth:
+                type: array
+                items:
+                  type: number
+        best_params_list:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: number
+        best_r_squared_list:
+          type: object
+          additionalProperties:
+            type: number
+        calc_results:
+          type: object
+          additionalProperties:
+            type: object
+            properties:
+              extended_time:
+                type: array
+                items:
+                  type: string
+                  format: date-time
+              best_fit_line:
+                type: array
+                items:
+                  type: number
+              infiltration_rate:
+                type: number
+              delta_x:
+                type: number
+              y_average:
+                type: number
+
   securitySchemes:
     rain_auth:
       type: oauth2
