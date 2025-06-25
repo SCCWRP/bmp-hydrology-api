@@ -372,7 +372,7 @@ def infiltration():
                 ]
 
                 # Calculate infiltration rate parameters
-                k_value = best_params[1] * 3600  # Convert k from 1/hr to 1/s
+                k_value = best_params[1] * 3600  # Convert k from 1/s to 1/hr
                 y_average = df.loc[best_window_indexes, smoothed_col].mean()
                 delta_x = pd.Timedelta(window_end - window_start).total_seconds() / 3600
                 infiltration_rate = k_value * y_average
@@ -387,7 +387,7 @@ def infiltration():
                 )
 
                 # Compute extended time series and best fit line for plotting
-                buffer_time = 0  #pd.Timedelta(minutes=720)
+                buffer_time = 0  # pd.Timedelta(minutes=720)
                 extended_time = pd.date_range(
                     start=window_start - buffer_time,
                     end=window_end + buffer_time,
@@ -441,7 +441,7 @@ def infiltration():
             "best_r_squared_list": best_r_squared_list,
             "calc_results": calc_results,
         }
-        
+
         return jsonify(result)
     except Exception as e:
         # Return error message and a 500 status code if something goes wrong
