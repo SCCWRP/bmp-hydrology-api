@@ -10,8 +10,6 @@ def get_runoff_duration(formatted_data):
 
 
 def get_runoff_volume(formatted_data, unit="s"):
-    print("unit")
-    print(unit)
     runoff_volume_segments = formatted_data.dropna()
     runoff_volume_segments = runoff_volume_segments.rolling(window=2).apply(
         trapezoid, kwargs={"unit": unit}

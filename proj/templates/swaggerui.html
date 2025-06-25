@@ -7,6 +7,24 @@
       BMP Hydrology API
     </title>
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/swagger-ui.css') }}">
+    <style>
+      /* Make Markdown headings and descriptions larger in Swagger UI */
+      .swagger-ui .markdown h2,
+      .swagger-ui .markdown h3,
+      .swagger-ui .markdown h4 {
+        font-size: 2em !important;
+      }
+      .swagger-ui .markdown p,
+      .swagger-ui .opblock-description-wrapper,
+      .swagger-ui .opblock-summary-description {
+        font-size: 1.25em !important;
+      }
+      /* Make the API info description at the top larger */
+      .swagger-ui .info .markdown p,
+      .swagger-ui .info .markdown {
+        font-size: 1.5em !important;
+      }
+    </style>
   </head>
   <body>
     <div id="swagger-ui" openapi-url = "{{ url_for('static', filename = 'openapi.yaml') }}"></div>

@@ -129,11 +129,16 @@ def flow():
         time_units[data_type] = data_dict.pop("time_unit")
 
         if not isinstance(time_units[data_type], str):
-            time_units[data_type] = list(set(time_units[data_type]))[0]
-    print("time units")
-    print(time_units)
+            time_unit_list = list(set(time_units[data_type]))
+            if time_unit_list:
+                time_units[data_type] = time_unit_list[0]
+            else:
+                time_units[data_type] = None
     formatted_data = {}
     for data_type, df in data.items():
+        if df.empty:
+            print(f"Warning: {data_type} data is empty.")
+            continue
         formatted_data[data_type] = format_data(df)
 
     statistics = {}
@@ -313,6 +318,8 @@ def infiltration():
         # Get JSON input from the POST request
         request_data = request.get_json()
         data = request_data.get("data")
+        print("data")
+        print(data)
         smoothing_window = int(request_data.get("SMOOTHING_WINDOW"))
         regression_window = int(request_data.get("REGRESSION_WINDOW"))
         regression_threshold = float(request_data.get("REGRESSION_THRESHOLD"))
