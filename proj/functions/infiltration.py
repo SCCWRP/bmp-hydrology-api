@@ -1,5 +1,6 @@
 import numpy as np
 from scipy.optimize import curve_fit
+import math
 
 # Global default parameters (will be overridden by the API payload if provided)
 SMOOTHING_WINDOW = 15  # e.g., 15 minute window for median filter
@@ -12,8 +13,8 @@ def smooth_timeseries(depth, smoothing_window=SMOOTHING_WINDOW):
     # Get the average time difference in seconds between consecutive depth measurements
     mean_delta_t_s = depth.index.to_series().diff().mean().total_seconds()
     # Divide 15 minutes by the mean delta time to get the filter size in terms of data points
-    filter_size = min(smoothing_window*60 // mean_delta_t_s, 1)
-    return depth.rolling(window=f'{filter_size}s', center=True).median()
+    filter_size = min(math.ceil(smoothing_window * 60.0 / mean_delta_t_s), 1)
+    return depth.rolling(window=f"{filter_size}s", center=True).median()
 
 
 def exponential_decay(t, y0, k, c):
@@ -30,6 +31,8 @@ def fit_exponential_decay(time, depth, window_size):
         best_fit: array of fitted values (not used in the API output)
         best_r_squared: best R-squared value obtained
     """
+    print("Starting fit_exponential_decay function")
+
     best_fit = None
     best_params = None
     best_r_squared = -np.inf
@@ -51,7 +54,6 @@ def fit_exponential_decay(time, depth, window_size):
             t_orig = np.array(window_time_numeric)
             y_orig = np.array(window_depth)
 
-
             # Normalize time to [0, 1] and depth to [0, 1]
             t_max = np.max(t_orig)
             y_max = np.max(y_orig)
@@ -63,12 +65,10 @@ def fit_exponential_decay(time, depth, window_size):
                 params, _ = curve_fit(
                     exponential_decay,
                     t_norm,
-                    y_norm
+                    y_norm,
                 )
                 # Calculate the R-squared value
-                residuals = y_norm - exponential_decay(
-                    t_norm, *params
-                )
+                residuals = y_norm - exponential_decay(t_norm, *params)
                 ss_res = np.sum(residuals**2)
                 ss_tot = np.sum((y_norm - np.mean(y_norm)) ** 2)
                 r_squared = 1 - (ss_res / ss_tot)
@@ -93,5 +93,5 @@ def fit_exponential_decay(time, depth, window_size):
                 f"R-squared below threshold: {best_r_squared} for window size {window_size}."
             )
             window_size -= 60
-
+    print(f"Finished. Fitted parameters: {best_params}, R-squared: {best_r_squared}")
     return best_window, best_params, best_fit, best_r_squared
