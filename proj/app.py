@@ -318,8 +318,6 @@ def infiltration():
         # Get JSON input from the POST request
         request_data = request.get_json()
         data = request_data.get("data")
-        print("data")
-        print(data)
         smoothing_window = int(request_data.get("SMOOTHING_WINDOW"))
         regression_window = int(request_data.get("REGRESSION_WINDOW"))
         regression_threshold = float(request_data.get("REGRESSION_THRESHOLD"))
@@ -357,11 +355,22 @@ def infiltration():
         for piez in piezometer_cols:
             # Create a smoothed column name that replaces spaces with underscores
             smoothed_col = f"smooth_{piez.replace(' ', '_')}"
-            df[smoothed_col] = smooth_timeseries(df[piez])
+            df[smoothed_col], mean_delta_t_s = smooth_timeseries(df[piez])
+            print("delta t bar before round")
+            print(mean_delta_t_s)
+            mean_delta_t_s = round(mean_delta_t_s)
+
+            print("delta t bar after round")
+            print(mean_delta_t_s)
+            print("initial window size")
+            print(int(round(REGRESSION_WINDOW / mean_delta_t_s)))
 
             # Fit the exponential decay model using the provided regression window size
-            best_window, best_params, best_fit, best_r_squared = fit_exponential_decay(
-                pd.Series(df.index), df[smoothed_col], REGRESSION_WINDOW
+            best_window, best_params, best_fit, best_r_squared, window_size = fit_exponential_decay(
+                pd.Series(df.index), 
+                df[smoothed_col], 
+                mean_delta_t_s, # round delta t bar 
+                int(round(REGRESSION_WINDOW / mean_delta_t_s))
             )
 
             if best_window:
@@ -413,7 +422,8 @@ def infiltration():
                         for val in best_fit_line.tolist()
                     ],
                     "infiltration_rate": infiltration_rate,
-                    "delta_x": delta_x,
+                    #"delta_x": delta_x,
+                    "delta_x": window_size / 60,  # Convert window size from minutes to hours
                     "y_average": y_average,
                 }
             else:
