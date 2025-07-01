@@ -355,22 +355,21 @@ def infiltration():
         for piez in piezometer_cols:
             # Create a smoothed column name that replaces spaces with underscores
             smoothed_col = f"smooth_{piez.replace(' ', '_')}"
-            df[smoothed_col], mean_delta_t_s = smooth_timeseries(df[piez])
+            df[smoothed_col], mean_delta_t = smooth_timeseries(df[piez])
             print("delta t bar before round")
-            print(mean_delta_t_s)
-            mean_delta_t_s = round(mean_delta_t_s)
-
+            print(mean_delta_t)
+            mean_delta_t = round(mean_delta_t)
             print("delta t bar after round")
-            print(mean_delta_t_s)
+            print(mean_delta_t)
             print("initial window size")
-            print(int(round(REGRESSION_WINDOW / mean_delta_t_s)))
+            print(int(round(REGRESSION_WINDOW / mean_delta_t)))
 
             # Fit the exponential decay model using the provided regression window size
             best_window, best_params, best_fit, best_r_squared, window_size = fit_exponential_decay(
                 pd.Series(df.index), 
                 df[smoothed_col], 
-                mean_delta_t_s, # round delta t bar 
-                int(round(REGRESSION_WINDOW / mean_delta_t_s))
+                mean_delta_t, # round delta t bar 
+                int(round(REGRESSION_WINDOW / mean_delta_t))
             )
 
             if best_window:

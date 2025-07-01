@@ -12,9 +12,14 @@ def smooth_timeseries(depth, smoothing_window=SMOOTHING_WINDOW):
     """Apply a median filter to smooth the depth data."""
     # Get the average time difference in seconds between consecutive depth measurements
     mean_delta_t_s = depth.index.to_series().diff().mean().total_seconds()
-    # Divide 15 minutes by the mean delta time to get the filter size in terms of data points
-    filter_size = min(math.ceil(smoothing_window * 60.0 / mean_delta_t_s), 1)
-    return depth.rolling(window=f"{filter_size}s", center=True).median(), mean_delta_t_s / 60
+    mean_delta_t = mean_delta_t_s / 60 # Convert to minutes
+    filter_size = max(int(round(smoothing_window / mean_delta_t)), 1)  # Number of data points in the window
+
+    print("current smoothing_window:", filter_size)
+
+    # Use rolling median with window size in minutes since depth has a datetime index
+    smoothed = depth.rolling(window=f"{filter_size}min", center=True).median()
+    return smoothed, mean_delta_t
 
 
 def exponential_decay(t, y0, k, c):
@@ -93,6 +98,6 @@ def fit_exponential_decay(time, depth, mean_delta_t_s, window_size):
             print(
                 f"R-squared below threshold: {best_r_squared} for window size {window_size}."
             )
-            window_size -= math.ceil(60 / mean_delta_t_s)
+            window_size -= math.floor(60 / mean_delta_t_s) # round down to get more data points for the window size, we want to reduce just a little bit.
     print(f"Finished. Fitted parameters: {best_params}, R-squared: {best_r_squared}")
     return best_window, best_params, best_fit, best_r_squared, window_size
