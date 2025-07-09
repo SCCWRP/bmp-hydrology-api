@@ -391,7 +391,7 @@ def infiltration():
                 y_average = df.loc[best_window_indexes, smoothed_col].mean()
                 delta_x = pd.Timedelta(window_end - window_start).total_seconds() / 3600
                 infiltration_rate = k_value * y_average
-
+                print("raw duration" + str(delta_x))
                 print(f"Best window for {piez}: {window_start} - {window_end}")
                 print(
                     f"Average infiltration rate during the best window for {piez}: {infiltration_rate:.2f} cm/hr"
@@ -422,7 +422,7 @@ def infiltration():
                     ],
                     "infiltration_rate": infiltration_rate,
                     #"delta_x": delta_x,
-                    "delta_x": window_size / 60,  # Convert window size from minutes to hours
+                    "delta_x": round(delta_x),  # Convert window size from minutes to hours
                     "y_average": y_average,
                 }
             else:
