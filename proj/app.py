@@ -342,6 +342,7 @@ def infiltration():
 
         # Prepare data frame for rolling operations in smoothing function
         df = df.set_index("datetime")
+        df = df.sort_index()  # Ensure index is monotonic increasing
 
         # Prepare dictionaries to store results for each piezometer column
         best_windows = {}
@@ -460,5 +461,6 @@ def infiltration():
 
         return jsonify(result)
     except Exception as e:
+        print(e)
         # Return error message and a 500 status code if something goes wrong
         return jsonify({"error": str(e)}), 500
