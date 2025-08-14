@@ -27,7 +27,7 @@ def exponential_decay(t, y0, k, c):
     return y0 * np.exp(-k * t) + c
 
 
-def fit_exponential_decay(time, depth, mean_delta_t_s, window_size):
+def fit_exponential_decay(time, depth, mean_delta_t_s, window_size, regression_threshold=REGRESSION_THRESHOLD):
     """
     Fits an exponential decay model to a time series of depth measurements within a sliding window.
     Returns:
@@ -42,10 +42,9 @@ def fit_exponential_decay(time, depth, mean_delta_t_s, window_size):
     best_params = None
     best_r_squared = -np.inf
     best_window = None
-
+    print("regression threshold:", regression_threshold)
     # Continue trying with a sliding window until the R-squared threshold is met
-
-    while best_r_squared < REGRESSION_THRESHOLD and window_size > 1:
+    while best_r_squared < regression_threshold and window_size > 1:
         print(f"Trying window size: {window_size}")
 
         for i in range(len(time) - window_size + 1):
@@ -94,7 +93,7 @@ def fit_exponential_decay(time, depth, mean_delta_t_s, window_size):
                 continue
 
         # If no acceptable fit is found, reduce the window size and try again
-        if best_r_squared < REGRESSION_THRESHOLD:
+        if best_r_squared < regression_threshold:
             print(
                 f"R-squared below threshold: {best_r_squared} for window size {window_size}."
             )

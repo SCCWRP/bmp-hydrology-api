@@ -370,7 +370,8 @@ def infiltration():
                 pd.Series(df.index), 
                 df[smoothed_col], 
                 mean_delta_t, # round delta t bar 
-                int(round(REGRESSION_WINDOW / mean_delta_t))
+                int(round(REGRESSION_WINDOW / mean_delta_t)),
+                regression_threshold
             )
 
             if best_window:
