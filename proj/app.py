@@ -362,6 +362,11 @@ def infiltration():
             mean_delta_t = round(mean_delta_t)
             print("delta t bar after round")
             print(mean_delta_t)
+            if mean_delta_t == 0:
+                raise ValueError(
+                    f"mean_delta_t is 0 for column '{piez}': all timestamps are identical. "
+                    "Ensure input data contains full datetime values with time components, not just dates."
+                )
             print("initial window size")
             print(int(round(REGRESSION_WINDOW / mean_delta_t)))
 
